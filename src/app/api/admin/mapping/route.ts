@@ -38,18 +38,18 @@ export async function POST(request: NextRequest) {
       const rowNum = i + 2; // +2 for header and 0-indexing
 
       try {
-        const mobile = row.mobile?.trim();
-        const studentName = row.student_name?.trim() || row.name?.trim();
-        const bu = row.bu?.trim();
+        const userId = (row.user_id || row.Userid || row.userid || row.UserID || row['User ID'])?.trim();
+        const bu = (row.bu || row.BU || row.Bu)?.trim();
+        let mobile = (row.mobile || row.Mobile || row['Contact number'] || row['contact number'] || row.phone || row.Phone)?.trim()?.replace(/[^0-9]/g, '') || '';
 
-        // Validation - only 3 required fields
-        if (!mobile || !/^\d{10}$/.test(mobile)) {
-          errors.push({ row: rowNum, error: 'mobile must be exactly 10 digits' });
-          continue;
+        // Strip country code prefix
+        if (mobile.startsWith('91') && mobile.length === 12) {
+          mobile = mobile.substring(2);
         }
 
-        if (!studentName || studentName.length === 0) {
-          errors.push({ row: rowNum, error: 'student_name is required' });
+        // Validation - 3 required fields
+        if (!userId || userId.length === 0) {
+          errors.push({ row: rowNum, error: 'user_id is required' });
           continue;
         }
 
@@ -58,19 +58,23 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Auto-generate user_id
-        const userId = uuidv4();
+        if (!mobile || !/^\d{10}$/.test(mobile)) {
+          errors.push({ row: rowNum, error: `mobile must be 10 digits, got "${row.mobile?.trim()}"` });
+          continue;
+        }
 
-        // region is optional, default to bu value
+        // Optional fields
+        const studentName = row.student_name?.trim() || row.name?.trim() || null;
         const region = row.region?.trim() || '';
 
-        // Upsert by mobile (since mobile is unique)
+        // Upsert by user_id
         const result = await execute(
           `INSERT INTO student_mapping
            (user_id, mobile, student_name, bu, region)
            VALUES ($1, $2, $3, $4, $5)
-           ON CONFLICT (mobile) DO UPDATE SET
-             student_name = $3,
+           ON CONFLICT (user_id) DO UPDATE SET
+             mobile = $2,
+             student_name = COALESCE($3, student_mapping.student_name),
              bu = $4,
              region = CASE WHEN $5 = '' THEN student_mapping.region ELSE $5 END`,
           [userId, mobile, studentName, bu, region]

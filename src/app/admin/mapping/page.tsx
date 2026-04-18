@@ -135,7 +135,7 @@ export default function MappingPage() {
   };
 
   const downloadTemplate = () => {
-    const csvContent = 'mobile,student_name,bu\n9876543210,Rahul Sharma,JEE-2Y\n9876543211,Priya Patel,JEE-1Y\n';
+    const csvContent = 'Userid,BU,Contact number\nv_4102546218158221,Offline,8248664304\nv_4102616349325145,Online,8248636585\n';
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -364,16 +364,16 @@ export default function MappingPage() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h3 className="font-bold text-blue-900 mb-3">CSV Template Format</h3>
         <p className="text-sm text-blue-800 mb-3">
-          Your CSV file should have the following 3 columns:
+          Your CSV file should have 3 columns (headers are flexible):
         </p>
         <div className="bg-white rounded p-3 font-mono text-xs text-gray-700 overflow-x-auto">
-          <div>mobile,student_name,bu</div>
+          <div>Userid,BU,Contact number</div>
           <div className="mt-2 text-gray-500">
             Example:
           </div>
-          <div>9876543210,Rahul Sharma,JEE-2Y</div>
-          <div>9876543211,Priya Patel,JEE-1Y</div>
-          <div>9876543212,Amit Kumar,JEE-Dropper</div>
+          <div>v_4102546218158221,Offline,8248664304</div>
+          <div>v_4102616349325145,Online,8248636585</div>
+          <div>v_4102583233244835,Offline,9790962867</div>
         </div>
       </div>
     </div>
