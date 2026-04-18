@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { execute } from '@/lib/db';
+import { execute, getPool } from '@/lib/db';
 import * as Papa from 'papaparse';
 
 interface CSVRow {
   [key: string]: string;
 }
 
-// Normalize a header to match known fields
 function findValue(row: CSVRow, possibleKeys: string[]): string | undefined {
-  // First try exact match
   for (const key of possibleKeys) {
     if (row[key] !== undefined) return row[key];
   }
-  // Then try case-insensitive match against all row keys
   const rowKeys = Object.keys(row);
   for (const possible of possibleKeys) {
     const lower = possible.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -24,21 +21,19 @@ function findValue(row: CSVRow, possibleKeys: string[]): string | undefined {
   return undefined;
 }
 
+export const maxDuration = 60; // Allow up to 60 seconds on Vercel
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'File is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'File is required' }, { status: 400 });
     }
 
     const text = await file.text();
 
-    // Parse CSV
     const parseResult = Papa.parse<CSVRow>(text, {
       header: true,
       skipEmptyLines: true,
@@ -49,82 +44,102 @@ export async function POST(request: NextRequest) {
     const rows = parseResult.data as CSVRow[];
     const errors: Array<{ row: number; error: string }> = [];
     let rows_added = 0;
-    let rows_updated = 0;
 
-    // Log headers for debugging
-    const headers = parseResult.meta?.fields || [];
-    console.log('CSV Headers:', headers);
-    console.log('Total rows:', rows.length);
-    if (rows.length > 0) console.log('First row:', JSON.stringify(rows[0]));
+    // Process in batches of 500
+    const BATCH_SIZE = 500;
+    const validRows: Array<[string, string, string | null, string, string]> = [];
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       const rowNum = i + 2;
 
+      const userId = findValue(row, ['Userid', 'user_id', 'userid', 'UserID', 'User ID', 'UserId'])?.trim();
+      const bu = findValue(row, ['BU', 'bu', 'Bu', 'business_unit'])?.trim();
+      let mobile = findValue(row, ['Contact number', 'contact number', 'mobile', 'Mobile', 'phone', 'Phone', 'contact', 'Contact'])?.trim()?.replace(/[^0-9]/g, '') || '';
+
+      if (mobile.startsWith('91') && mobile.length === 12) {
+        mobile = mobile.substring(2);
+      }
+
+      if (!userId || userId.length === 0) {
+        if (errors.length < 10) errors.push({ row: rowNum, error: 'user_id is required' });
+        continue;
+      }
+      if (!bu || bu.length === 0) {
+        if (errors.length < 10) errors.push({ row: rowNum, error: 'bu is required' });
+        continue;
+      }
+      if (!mobile || !/^\d{10}$/.test(mobile)) {
+        if (errors.length < 10) errors.push({ row: rowNum, error: `mobile must be 10 digits, got "${mobile}"` });
+        continue;
+      }
+
+      const studentName = findValue(row, ['student_name', 'name', 'Name', 'Student Name'])?.trim() || null;
+      const region = findValue(row, ['region', 'Region'])?.trim() || '';
+
+      validRows.push([userId, mobile, studentName, bu, region]);
+    }
+
+    // Batch insert using a single query per batch
+    for (let b = 0; b < validRows.length; b += BATCH_SIZE) {
+      const batch = validRows.slice(b, b + BATCH_SIZE);
+      const values: unknown[] = [];
+      const placeholders: string[] = [];
+      let idx = 1;
+
+      for (const [userId, mobile, studentName, bu, region] of batch) {
+        placeholders.push(`($${idx}, $${idx+1}, $${idx+2}, $${idx+3}, $${idx+4})`);
+        values.push(userId, mobile, studentName, bu, region);
+        idx += 5;
+      }
+
       try {
-        const userId = findValue(row, ['Userid', 'user_id', 'userid', 'UserID', 'User ID', 'UserId'])?.trim();
-        const bu = findValue(row, ['BU', 'bu', 'Bu', 'business_unit'])?.trim();
-        let mobile = findValue(row, ['Contact number', 'contact number', 'mobile', 'Mobile', 'phone', 'Phone', 'contact', 'Contact'])?.trim()?.replace(/[^0-9]/g, '') || '';
-
-        // Strip country code prefix
-        if (mobile.startsWith('91') && mobile.length === 12) {
-          mobile = mobile.substring(2);
-        }
-
-        // Validation
-        if (!userId || userId.length === 0) {
-          errors.push({ row: rowNum, error: `user_id is required (headers found: ${headers.join(', ')})` });
-          continue;
-        }
-
-        if (!bu || bu.length === 0) {
-          errors.push({ row: rowNum, error: 'bu is required' });
-          continue;
-        }
-
-        if (!mobile || !/^\d{10}$/.test(mobile)) {
-          errors.push({ row: rowNum, error: `mobile must be 10 digits, got "${mobile}" from original "${findValue(row, ['Contact number', 'mobile', 'phone'])}"` });
-          continue;
-        }
-
-        // Optional fields
-        const studentName = findValue(row, ['student_name', 'name', 'Name', 'Student Name'])?.trim() || null;
-        const region = findValue(row, ['region', 'Region'])?.trim() || '';
-
-        // Delete any existing record with same mobile (to avoid unique constraint)
-        await execute('DELETE FROM student_mapping WHERE mobile = $1 AND user_id != $2', [mobile, userId]);
-
-        // Upsert by user_id
-        const result = await execute(
-          `INSERT INTO student_mapping
-           (user_id, mobile, student_name, bu, region)
-           VALUES ($1, $2, $3, $4, $5)
+        await getPool().query(
+          `INSERT INTO student_mapping (user_id, mobile, student_name, bu, region)
+           VALUES ${placeholders.join(',')}
            ON CONFLICT (user_id) DO UPDATE SET
-             mobile = $2,
-             student_name = COALESCE($3, student_mapping.student_name),
-             bu = $4,
-             region = CASE WHEN $5 = '' THEN student_mapping.region ELSE $5 END`,
-          [userId, mobile, studentName, bu, region]
+             mobile = EXCLUDED.mobile,
+             student_name = COALESCE(EXCLUDED.student_name, student_mapping.student_name),
+             bu = EXCLUDED.bu,
+             region = CASE WHEN EXCLUDED.region = '' THEN student_mapping.region ELSE EXCLUDED.region END`,
+          values
         );
-
-        if (result > 0) {
-          rows_added++;
+        rows_added += batch.length;
+      } catch (err) {
+        // If batch fails (e.g., duplicate mobile), fall back to row-by-row
+        for (const [userId, mobile, studentName, bu, region] of batch) {
+          try {
+            await execute(
+              `INSERT INTO student_mapping (user_id, mobile, student_name, bu, region)
+               VALUES ($1, $2, $3, $4, $5)
+               ON CONFLICT (user_id) DO UPDATE SET
+                 mobile = EXCLUDED.mobile,
+                 student_name = COALESCE(EXCLUDED.student_name, student_mapping.student_name),
+                 bu = EXCLUDED.bu,
+                 region = CASE WHEN EXCLUDED.region = '' THEN student_mapping.region ELSE EXCLUDED.region END`,
+              [userId, mobile, studentName, bu, region]
+            );
+            rows_added++;
+          } catch (rowErr) {
+            if (errors.length < 20) {
+              errors.push({ row: 0, error: `${userId}: ${rowErr instanceof Error ? rowErr.message : 'Unknown error'}` });
+            }
+          }
         }
-      } catch (error) {
-        errors.push({ row: rowNum, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
 
     return NextResponse.json({
       rows_added,
-      rows_updated,
+      rows_updated: 0,
       total: rows.length,
-      errors: errors.length > 0 ? errors.slice(0, 20) : undefined, // limit to first 20 errors
+      valid: validRows.length,
+      errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
     console.error('Error in admin mapping:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown' },
       { status: 500 }
     );
   }
