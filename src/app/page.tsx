@@ -68,8 +68,8 @@ export default function Home() {
         userId = regData.userId;
       }
 
-      // Step 2: Upload file
-      setStatusMsg('Uploading scorecard...');
+      // Step 2: Upload file + OCR in one call
+      setStatusMsg('Uploading & reading your scorecard...');
       const formData = new FormData();
       formData.append('file', uploadFile);
       formData.append('userId', userId);
@@ -81,50 +81,33 @@ export default function Home() {
       const uploadData = await uploadRes.json();
       if (!uploadRes.ok) throw new Error(uploadData.error || 'Upload failed');
 
-      // Step 3: Try Claude OCR
-      setStatusMsg('AI is reading your scorecard...');
-      let ocrSuccess = false;
-      try {
-        const ocrRes = await fetch('/api/student/scorecard/ocr', {
+      if (uploadData.ocrSuccess && uploadData.data && uploadData.data.crl) {
+        const d = uploadData.data;
+
+        // Auto-confirm with extracted data
+        setStatusMsg('Finding your colleges...');
+        const confirmRes = await fetch('/api/student/scorecard/confirm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ uploadId: uploadData.uploadId, userId }),
+          body: JSON.stringify({
+            uploadId: uploadData.uploadId,
+            userId,
+            nameOnCard: d.nameOnCard || 'Student',
+            applicationNo: d.applicationNo || '',
+            category: d.category || 'OPEN',
+            pwbd: d.pwbd || false,
+            s1Nta: d.s1Nta || null,
+            s2Nta: d.s2Nta || null,
+            crl: d.crl || 0,
+            catRank: d.catRank || null,
+          }),
         });
-        const ocrData = await ocrRes.json();
+        if (!confirmRes.ok) throw new Error('Failed to process');
 
-        if (ocrRes.ok && ocrData.success && ocrData.data && ocrData.data.crl) {
-          ocrSuccess = true;
-          const d = ocrData.data;
-
-          // Auto-confirm with extracted data
-          setStatusMsg('Finding your colleges...');
-          const confirmRes = await fetch('/api/student/scorecard/confirm', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              uploadId: uploadData.uploadId,
-              userId,
-              nameOnCard: d.nameOnCard || 'Student',
-              applicationNo: d.applicationNo || '',
-              category: d.category || 'OPEN',
-              pwbd: d.pwbd || false,
-              s1Nta: d.s1Nta || null,
-              s2Nta: d.s2Nta || null,
-              crl: d.crl || 0,
-              catRank: d.catRank || null,
-            }),
-          });
-          if (!confirmRes.ok) throw new Error('Failed to process');
-
-          router.push(`/result?userId=${userId}`);
-          return;
-        }
-      } catch {
-        // OCR failed — fall through to manual form
-      }
-
-      if (!ocrSuccess) {
-        // Show manual form
+        router.push(`/result?userId=${userId}`);
+        return;
+      } else {
+        // OCR failed or no API key — show manual form
         setManualUserId(userId);
         setManualUploadId(uploadData.uploadId);
         setShowManualForm(true);
