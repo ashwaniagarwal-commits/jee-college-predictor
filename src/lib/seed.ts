@@ -242,7 +242,7 @@ async function seed() {
   console.log('Inserted 1 admin user');
 
   // Calculate final stats
-  const totalRecordsPerInstitute = branches => branches.length * YEARS.length * CATEGORIES.length;
+  const totalRecordsPerInstitute = (branches: Array<{ name: string; multiplier: number }>) => branches.length * YEARS.length * CATEGORIES.length;
   const totalInstituteRecords = INSTITUTES.reduce((sum, inst) => {
     const branches = BRANCH_CONFIGS[inst.type as keyof typeof BRANCH_CONFIGS];
     return sum + totalRecordsPerInstitute(branches);
