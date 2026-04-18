@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { execute } from '@/lib/db';
+import { v4 as uuidv4 } from 'uuid';
 import * as Papa from 'papaparse';
 
 interface CSVRow {
@@ -28,68 +29,66 @@ export async function POST(request: NextRequest) {
     });
 
     const rows = parseResult.data as CSVRow[];
-    const errors: string[] = [];
-    let added = 0;
+    const errors: Array<{ row: number; error: string }> = [];
+    let rows_added = 0;
+    let rows_updated = 0;
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       const rowNum = i + 2; // +2 for header and 0-indexing
 
       try {
-        const userId = row.user_id?.trim();
         const mobile = row.mobile?.trim();
-        const studentName = row.student_name?.trim();
+        const studentName = row.student_name?.trim() || row.name?.trim();
         const bu = row.bu?.trim();
-        const region = row.region?.trim();
-        const category = row.category?.trim();
-        const homeState = row.home_state?.trim();
 
-        // Validation
-        if (!userId) {
-          errors.push(`Row ${rowNum}: user_id is required`);
+        // Validation - only 3 required fields
+        if (!mobile || !/^\d{10}$/.test(mobile)) {
+          errors.push({ row: rowNum, error: 'mobile must be exactly 10 digits' });
           continue;
         }
 
-        if (!mobile || mobile.length !== 10 || !/^\d{10}$/.test(mobile)) {
-          errors.push(`Row ${rowNum}: mobile must be exactly 10 digits`);
+        if (!studentName || studentName.length === 0) {
+          errors.push({ row: rowNum, error: 'student_name is required' });
           continue;
         }
 
         if (!bu || bu.length === 0) {
-          errors.push(`Row ${rowNum}: bu is required`);
+          errors.push({ row: rowNum, error: 'bu is required' });
           continue;
         }
 
-        if (!region || region.length === 0) {
-          errors.push(`Row ${rowNum}: region is required`);
-          continue;
-        }
+        // Auto-generate user_id
+        const userId = uuidv4();
 
-        // Upsert
-        await execute(
+        // region is optional, default to bu value
+        const region = row.region?.trim() || '';
+
+        // Upsert by mobile (since mobile is unique)
+        const result = await execute(
           `INSERT INTO student_mapping
-           (user_id, mobile, student_name, bu, region, category, home_state)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)
-           ON CONFLICT (user_id) DO UPDATE SET
-             mobile = $2,
+           (user_id, mobile, student_name, bu, region)
+           VALUES ($1, $2, $3, $4, $5)
+           ON CONFLICT (mobile) DO UPDATE SET
              student_name = $3,
              bu = $4,
-             region = $5,
-             category = $6,
-             home_state = $7`,
-          [userId, mobile, studentName || null, bu, region, category || null, homeState || null]
+             region = CASE WHEN $5 = '' THEN student_mapping.region ELSE $5 END`,
+          [userId, mobile, studentName, bu, region]
         );
 
-        added++;
+        if (result > 0) {
+          rows_added++;
+        }
       } catch (error) {
-        errors.push(`Row ${rowNum}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors.push({ row: rowNum, error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
 
     return NextResponse.json({
+      rows_added,
+      rows_updated,
       total: rows.length,
-      added,
-      errors,
+      errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {
     console.error('Error in admin mapping:', error);
