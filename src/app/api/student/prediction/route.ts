@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     }>(
       `SELECT DISTINCT institute_name, institute_type, branch_name, quota, category, gender
        FROM josaa_cutoffs
-       WHERE round = 6
+       WHERE round = 6 AND institute_type != 'IIT'
        ORDER BY institute_name, branch_name, quota, category, gender`
     );
 
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       const closingRankRows = await query<{ closing_rank: number }>(
         `SELECT closing_rank FROM josaa_cutoffs
          WHERE institute_name = $1 AND branch_name = $2 AND quota = $3 AND category = $4 AND gender = $5
-         AND round = 6 AND year IN (2021, 2022, 2023)
+         AND round = 6 AND year IN (2022, 2023, 2024)
          ORDER BY year DESC`,
         [
           combo.institute_name,
@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
       const openingRankRow = await queryOne<{ opening_rank: number | null }>(
         `SELECT opening_rank FROM josaa_cutoffs
          WHERE institute_name = $1 AND branch_name = $2 AND quota = $3 AND category = $4 AND gender = $5
-         AND round = 6 AND year = 2023`,
+         AND round = 6 AND year = 2024`,
         [
           combo.institute_name,
           combo.branch_name,

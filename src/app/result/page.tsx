@@ -63,7 +63,7 @@ function ResultPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'safe' | 'moderate' | 'ambitious'>('safe');
-  const [selectedInstituteTypes, setSelectedInstituteTypes] = useState<string[]>(['IIT', 'NIT', 'IIIT', 'GFTI']);
+  const [selectedInstituteTypes, setSelectedInstituteTypes] = useState<string[]>(['NIT', 'IIIT', 'GFTI']);
   const [branchSearch, setBranchSearch] = useState('');
 
   useEffect(() => {
@@ -217,7 +217,7 @@ function ResultPageContent() {
                 Institute Type
               </label>
               <div className="flex flex-wrap gap-2">
-                {['IIT', 'NIT', 'IIIT', 'GFTI'].map((type) => (
+                {['NIT', 'IIIT', 'GFTI'].map((type) => (
                   <button
                     key={type}
                     onClick={() =>
