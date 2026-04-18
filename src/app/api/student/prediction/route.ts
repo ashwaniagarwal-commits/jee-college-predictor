@@ -137,29 +137,33 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Batch insert predictions (skip if too many to avoid timeout)
-    if (predictions.length > 0 && predictions.length <= 500) {
-      const values: unknown[] = [];
-      const placeholders: string[] = [];
-      let idx = 1;
+    // Deduplicate: keep one entry per institute+branch combo (prefer OPEN category, best bucket)
+    const seen = new Map<string, PredictionItem>();
+    const bucketPriority: Record<string, number> = { safe: 1, moderate: 2, ambitious: 3 };
 
-      for (const pred of predictions) {
-        placeholders.push(`($${idx}, $${idx+1}, $${idx+2}, $${idx+3}, $${idx+4}, $${idx+5}, $${idx+6}, $${idx+7}, $${idx+8}, $${idx+9}, $${idx+10}, $${idx+11})`);
-        values.push(
-          userId, pred.bucket, pred.institute_name, pred.institute_type,
-          pred.branch_name, pred.quota, pred.category, pred.gender,
-          pred.openingRank, pred.closingRank, pred.medianClosingRank, pred.admitProb
-        );
-        idx += 12;
+    for (const pred of predictions) {
+      const key = `${pred.institute_name}|${pred.branch_name}`;
+      const existing = seen.get(key);
+
+      if (!existing) {
+        seen.set(key, pred);
+      } else {
+        // Prefer the one with better bucket (safe > moderate > ambitious)
+        const existingPriority = bucketPriority[existing.bucket] || 99;
+        const newPriority = bucketPriority[pred.bucket] || 99;
+        if (newPriority < existingPriority) {
+          seen.set(key, pred);
+        } else if (newPriority === existingPriority && pred.category === 'OPEN') {
+          // Same bucket, prefer OPEN category
+          seen.set(key, pred);
+        }
       }
-
-      await execute(
-        `INSERT INTO prediction_run
-         (user_id, bucket, institute_name, institute_type, branch_name, quota, category, gender, opening_rank, closing_rank, closing_rank_median, admit_prob)
-         VALUES ${placeholders.join(',')}`,
-        values
-      );
     }
+
+    const uniquePredictions = Array.from(seen.values());
+
+    // Sort by closing rank (ascending = best ranked colleges first)
+    uniquePredictions.sort((a, b) => a.medianClosingRank - b.medianClosingRank);
 
     // Group by bucket
     const grouped: Record<string, PredictionItem[]> = {
@@ -168,9 +172,14 @@ export async function GET(request: NextRequest) {
       ambitious: [],
     };
 
-    for (const pred of predictions) {
+    for (const pred of uniquePredictions) {
       grouped[pred.bucket].push(pred);
     }
+
+    // Sort each bucket by closing rank
+    grouped.safe.sort((a, b) => a.medianClosingRank - b.medianClosingRank);
+    grouped.moderate.sort((a, b) => a.medianClosingRank - b.medianClosingRank);
+    grouped.ambitious.sort((a, b) => a.medianClosingRank - b.medianClosingRank);
 
     return NextResponse.json({ ...grouped, studentCrl: crl });
   } catch (error) {
