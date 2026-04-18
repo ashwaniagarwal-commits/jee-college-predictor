@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #FF6B35;
+  --dark-navy: #1a1a2e;
+  --background: #ffffff;
+  --foreground: #1a1a2e;
+  --safe-green: #10b981;
+  --moderate-yellow: #f59e0b;
+  --ambitious-orange: #ff6b35;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.vedantu-primary {
+  color: var(--primary);
+}
+
+.vedantu-dark {
+  color: var(--dark-navy);
+}
+
+.btn-primary {
+  @apply bg-[#FF6B35] hover:bg-[#e55a24] text-white font-semibold py-3 px-6 rounded-lg transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-white border-2 border-[#FF6B35] text-[#FF6B35] hover:bg-orange-50 font-semibold py-3 px-6 rounded-lg transition-colors;
+}
+
+.card-shadow {
+  @apply bg-white rounded-lg shadow-md;
+}
