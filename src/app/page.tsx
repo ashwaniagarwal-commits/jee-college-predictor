@@ -104,7 +104,7 @@ export default function Home() {
         });
         if (!confirmRes.ok) throw new Error('Failed to process');
 
-        router.push(`/result?userId=${userId}`);
+        router.push(`/preferences?userId=${userId}`);
         return;
       } else {
         // OCR failed or no API key — show manual form
@@ -157,7 +157,7 @@ export default function Home() {
       const data = await confirmRes.json();
       if (!confirmRes.ok) throw new Error(data.error || 'Failed to process');
 
-      router.push(`/result?userId=${manualUserId}`);
+      router.push(`/preferences?userId=${manualUserId}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong';
       setError(message);

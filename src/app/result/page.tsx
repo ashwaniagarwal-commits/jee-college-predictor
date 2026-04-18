@@ -57,6 +57,7 @@ const getBucketColor = (bucket: string) => {
 function ResultPageContent() {
   const searchParams = useSearchParams();
   const userId = searchParams.get('userId');
+  const branchesParam = searchParams.get('branches');
 
   const [predictions, setPredictions] = useState<PredictionResponse | null>(null);
   const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
@@ -75,7 +76,11 @@ function ResultPageContent() {
 
     const fetchPredictions = async () => {
       try {
-        const response = await fetch(`/api/student/prediction?userId=${userId}`);
+        let url = `/api/student/prediction?userId=${userId}`;
+        if (branchesParam) {
+          url += `&branches=${encodeURIComponent(branchesParam)}`;
+        }
+        const response = await fetch(url);
         const data = await response.json();
 
         if (!response.ok) {
