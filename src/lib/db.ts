@@ -74,6 +74,7 @@ export async function initDb(): Promise<void> {
       name_on_card TEXT,
       category TEXT,
       pwbd BOOLEAN DEFAULT FALSE,
+      state_of_eligibility TEXT,
       s1_nta DOUBLE PRECISION,
       s2_nta DOUBLE PRECISION,
       best_nta DOUBLE PRECISION,

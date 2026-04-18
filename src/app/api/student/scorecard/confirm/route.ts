@@ -23,8 +23,10 @@ export async function POST(request: NextRequest) {
       category,
       s1Nta,
       s2Nta,
+      finalNta,
       catRank,
       pwbd,
+      stateOfEligibility,
     } = body;
 
     if (!uploadId || !userId || !applicationNo || !nameOnCard || !category) {
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Compute bestNta
-    const bestNta = Math.max(s1Nta || 0, s2Nta || 0);
+    const bestNta = finalNta || Math.max(s1Nta || 0, s2Nta || 0);
 
     // Determine cutoff for the category
     const cutoff = ADVANCED_CUTOFFS[category] || ADVANCED_CUTOFFS['OPEN'];
@@ -49,26 +51,28 @@ export async function POST(request: NextRequest) {
     // Insert or replace scorecard result
     await execute(
       `INSERT INTO scorecard_result
-       (user_id, application_no, name_on_card, category, pwbd, s1_nta, s2_nta, best_nta, crl, cat_rank, adv_cutoff_cat, advanced_qualified)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       (user_id, application_no, name_on_card, category, pwbd, state_of_eligibility, s1_nta, s2_nta, best_nta, crl, cat_rank, adv_cutoff_cat, advanced_qualified)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
        ON CONFLICT (user_id) DO UPDATE SET
          application_no = $2,
          name_on_card = $3,
          category = $4,
          pwbd = $5,
-         s1_nta = $6,
-         s2_nta = $7,
-         best_nta = $8,
-         crl = $9,
-         cat_rank = $10,
-         adv_cutoff_cat = $11,
-         advanced_qualified = $12`,
+         state_of_eligibility = $6,
+         s1_nta = $7,
+         s2_nta = $8,
+         best_nta = $9,
+         crl = $10,
+         cat_rank = $11,
+         adv_cutoff_cat = $12,
+         advanced_qualified = $13`,
       [
         userId,
         applicationNo,
         nameOnCard,
         category,
         pwbd ? true : false,
+        stateOfEligibility || null,
         s1Nta || null,
         s2Nta || null,
         bestNta,

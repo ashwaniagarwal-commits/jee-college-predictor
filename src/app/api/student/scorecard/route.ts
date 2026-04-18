@@ -91,8 +91,10 @@ export async function POST(request: NextRequest) {
   "candidate_name": "string - full name of the candidate",
   "category": "string - one of: OPEN, OBC-NCL, SC, ST, EWS",
   "pwbd": false,
+  "state_of_eligibility": "string - State of Eligibility as shown on the scorecard",
   "session1_nta_score": null or number - Total NTA Score for Session 1 / January attempt,
   "session2_nta_score": null or number - Total NTA Score for Session 2 / April attempt,
+  "final_total_nta_score": null or number - Final Total NTA Score (the best/final percentile),
   "crl": number - All India Rank (Common Rank List),
   "category_rank": null or number - Category Rank if available,
   "dob": "string - date of birth if visible"
@@ -103,6 +105,8 @@ Rules:
 - CRL is an integer rank (like 54032)
 - If a field is not visible or not applicable, use null
 - For category: if it says "GENERAL" or nothing specific, use "OPEN"
+- State of Eligibility is the state name (e.g., "Maharashtra", "Delhi", "Tamil Nadu")
+- Final Total NTA Score is the overall best percentile score
 - Return ONLY the JSON, nothing else`
                 }
               ]
@@ -135,8 +139,10 @@ Rules:
           nameOnCard: parsed.candidate_name || '',
           category: parsed.category || 'OPEN',
           pwbd: parsed.pwbd || false,
+          stateOfEligibility: parsed.state_of_eligibility || '',
           s1Nta: parsed.session1_nta_score,
           s2Nta: parsed.session2_nta_score,
+          finalNta: parsed.final_total_nta_score,
           crl: parsed.crl,
           catRank: parsed.category_rank,
         };

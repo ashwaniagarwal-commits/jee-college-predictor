@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   BarChart3,
   Upload,
+  Users,
   Menu,
   X,
 } from 'lucide-react';
@@ -98,6 +99,20 @@ export default function AdminLayout({
               </div>
             )}
           </div>
+
+          {/* Student Data */}
+          <Link href="/admin/students">
+            <button
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                isActive('/admin/students')
+                  ? 'bg-orange-500 text-white'
+                  : 'text-gray-300 hover:bg-gray-800'
+              }`}
+            >
+              <Users size={20} />
+              <span>Student Data</span>
+            </button>
+          </Link>
 
           {/* Mapping Upload */}
           <Link href="/admin/mapping">
