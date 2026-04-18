@@ -24,6 +24,7 @@ interface PredictionResponse {
   safe: PredictionItem[];
   moderate: PredictionItem[];
   ambitious: PredictionItem[];
+  studentCrl: number;
 }
 
 interface StudentInfo {
@@ -267,8 +268,9 @@ function ResultPageContent() {
           ) : (
             filteredPredictions.map((college, index) => {
               const badge = getInstituteTypeBadge(college.institute_type);
-              const rankDelta = college.medianClosingRank - college.openingRank;
-              const rankDeltaPercent = ((rankDelta / college.medianClosingRank) * 100).toFixed(1);
+              const studentRank = predictions?.studentCrl || 0;
+              const rankDelta = college.medianClosingRank - studentRank;
+              const rankDeltaPercent = college.medianClosingRank > 0 ? ((rankDelta / college.medianClosingRank) * 100).toFixed(1) : '0';
 
               return (
                 <div
@@ -298,7 +300,7 @@ function ResultPageContent() {
                     <div>
                       <p className="text-xs text-gray-600 font-semibold mb-1">Your Rank vs Closing</p>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold text-[#FF6B35]">{college.openingRank}</span>
+                        <span className="text-lg font-bold text-[#FF6B35]">{studentRank}</span>
                         <span className="text-xs text-gray-600">/</span>
                         <span className="text-sm text-gray-700">{college.medianClosingRank}</span>
                       </div>

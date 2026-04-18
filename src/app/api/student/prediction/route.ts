@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
       grouped[pred.bucket].push(pred);
     }
 
-    return NextResponse.json(grouped);
+    return NextResponse.json({ ...grouped, studentCrl: crl });
   } catch (error) {
     console.error('Error in prediction:', error);
     return NextResponse.json(
