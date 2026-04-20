@@ -64,7 +64,6 @@ function ResultPageContent() {
   const [studentInfo, setStudentInfo] = useState<StudentInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'safe' | 'moderate' | 'ambitious'>('safe');
   const [selectedInstituteTypes, setSelectedInstituteTypes] = useState<string[]>(['NIT', 'IIIT', 'GFTI']);
   const [branchSearch, setBranchSearch] = useState('');
 
@@ -138,7 +137,9 @@ function ResultPageContent() {
     return null;
   }
 
-  const filteredPredictions = (predictions[activeTab] || []).filter((item) => {
+  const allPredictions = predictions.safe || [];
+
+  const filteredPredictions = allPredictions.filter((item) => {
     const typeMatch = selectedInstituteTypes.includes(item.institute_type);
     const branchMatch = item.branch_name
       .toLowerCase()
@@ -146,9 +147,7 @@ function ResultPageContent() {
     return typeMatch && branchMatch;
   });
 
-  const safeCount = predictions.safe?.length || 0;
-  const moderateCount = predictions.moderate?.length || 0;
-  const ambitiousCount = predictions.ambitious?.length || 0;
+  const totalCount = allPredictions.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -178,41 +177,10 @@ function ResultPageContent() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Summary Strip */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          <div className="card-shadow p-4 border-l-4 border-green-500">
-            <p className="text-gray-600 text-sm font-semibold">Safe Colleges</p>
-            <p className="text-3xl font-bold text-green-600">{safeCount}</p>
-          </div>
-          <div className="card-shadow p-4 border-l-4 border-yellow-500">
-            <p className="text-gray-600 text-sm font-semibold">Moderate Colleges</p>
-            <p className="text-3xl font-bold text-yellow-600">{moderateCount}</p>
-          </div>
-          <div className="card-shadow p-4 border-l-4 border-orange-500 col-span-2 md:col-span-1">
-            <p className="text-gray-600 text-sm font-semibold">Ambitious Colleges</p>
-            <p className="text-3xl font-bold text-orange-600">{ambitiousCount}</p>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {[
-            { key: 'safe' as const, label: 'Safe', count: safeCount, color: 'green' },
-            { key: 'moderate' as const, label: 'Moderate', count: moderateCount, color: 'yellow' },
-            { key: 'ambitious' as const, label: 'Ambitious', count: ambitiousCount, color: 'orange' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
-                activeTab === tab.key
-                  ? `bg-${tab.color}-500 text-white`
-                  : `bg-white text-gray-700 border border-gray-200 hover:border-${tab.color}-300`
-              }`}
-            >
-              {tab.label} ({tab.count})
-            </button>
-          ))}
+        {/* Summary */}
+        <div className="card-shadow p-4 border-l-4 border-green-500 mb-8">
+          <p className="text-gray-600 text-sm font-semibold">Predicted Colleges</p>
+          <p className="text-3xl font-bold text-green-600">{totalCount}</p>
         </div>
 
         {/* Filters */}
@@ -275,13 +243,7 @@ function ResultPageContent() {
               return (
                 <div
                   key={index}
-                  className={`card-shadow p-6 border-l-4 ${
-                    activeTab === 'safe'
-                      ? 'border-green-500'
-                      : activeTab === 'moderate'
-                      ? 'border-yellow-500'
-                      : 'border-orange-500'
-                  }`}
+                  className="card-shadow p-6 border-l-4 border-green-500"
                 >
                   <div className="grid md:grid-cols-3 gap-4 mb-4">
                     <div>
