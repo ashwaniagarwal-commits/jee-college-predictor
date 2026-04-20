@@ -41,5 +41,5 @@ export async function getPresignedUrl(key: string): Promise<string> {
     Key: key,
   });
 
-  return getSignedUrl(getS3(), command, { expiresIn: 3600 });
+  return getSignedUrl(getS3(), command, { expiresIn: 259200 }); // 3 days
 }
