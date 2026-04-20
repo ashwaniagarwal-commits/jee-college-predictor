@@ -10,14 +10,22 @@ const pool = new Pool({
 
 async function run() {
   try {
-    await pool.query('ALTER TABLE scorecard_result ADD COLUMN IF NOT EXISTS state_of_eligibility TEXT;');
-    console.log('Added: state_of_eligibility');
-    await pool.query('ALTER TABLE scorecard_result ADD COLUMN IF NOT EXISTS pcm_nta DOUBLE PRECISION;');
-    console.log('Added: pcm_nta');
-    await pool.query('ALTER TABLE scorecard_result ADD COLUMN IF NOT EXISTS dob TEXT;');
-    console.log('Added: dob');
-    await pool.query('ALTER TABLE scorecard_result ADD COLUMN IF NOT EXISTS gender TEXT;');
-    console.log('Added: gender');
+    const columns = [
+      'state_of_eligibility TEXT',
+      's1_physics DOUBLE PRECISION',
+      's1_chemistry DOUBLE PRECISION',
+      's1_maths DOUBLE PRECISION',
+      's2_physics DOUBLE PRECISION',
+      's2_chemistry DOUBLE PRECISION',
+      's2_maths DOUBLE PRECISION',
+      'dob TEXT',
+      'gender TEXT',
+    ];
+    for (const col of columns) {
+      const name = col.split(' ')[0];
+      await pool.query(`ALTER TABLE scorecard_result ADD COLUMN IF NOT EXISTS ${col};`);
+      console.log('Added: ' + name);
+    }
     console.log('All columns added successfully!');
   } catch (e) {
     console.error(e);

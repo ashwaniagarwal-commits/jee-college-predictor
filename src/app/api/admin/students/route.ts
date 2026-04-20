@@ -38,8 +38,13 @@ export async function GET(request: NextRequest) {
       'category': 'sr.category',
       'state': 'sr.state_of_eligibility',
       's1nta': 'sr.s1_nta',
+      's1phy': 'sr.s1_physics',
+      's1chem': 'sr.s1_chemistry',
+      's1math': 'sr.s1_maths',
       's2nta': 'sr.s2_nta',
-      'pcmnta': 'sr.pcm_nta',
+      's2phy': 'sr.s2_physics',
+      's2chem': 'sr.s2_chemistry',
+      's2math': 'sr.s2_maths',
       'nta': 'sr.best_nta',
       'crl': 'sr.crl',
       'catrank': 'sr.cat_rank',
@@ -67,8 +72,13 @@ export async function GET(request: NextRequest) {
       state_of_eligibility: string;
       best_nta: number;
       s1_nta: number;
+      s1_physics: number;
+      s1_chemistry: number;
+      s1_maths: number;
       s2_nta: number;
-      pcm_nta: number;
+      s2_physics: number;
+      s2_chemistry: number;
+      s2_maths: number;
       crl: number;
       cat_rank: number;
       application_no: string;
@@ -80,7 +90,8 @@ export async function GET(request: NextRequest) {
       s3_key: string | null;
     }>(
       `SELECT sr.user_id, sr.name_on_card, sr.category, sr.state_of_eligibility,
-              sr.best_nta, sr.s1_nta, sr.s2_nta, sr.pcm_nta, sr.crl, sr.cat_rank,
+              sr.best_nta, sr.s1_nta, sr.s1_physics, sr.s1_chemistry, sr.s1_maths,
+              sr.s2_nta, sr.s2_physics, sr.s2_chemistry, sr.s2_maths, sr.crl, sr.cat_rank,
               sr.application_no, sr.dob, sr.gender,
               sr.advanced_qualified, sm.bu, sm.mobile,
               su.s3_key

@@ -23,7 +23,12 @@ export async function POST(request: NextRequest) {
       category,
       s1Nta,
       s2Nta,
-      pcmNta,
+      s1Physics,
+      s1Chemistry,
+      s1Maths,
+      s2Physics,
+      s2Chemistry,
+      s2Maths,
       finalNta,
       catRank,
       pwbd,
@@ -54,8 +59,8 @@ export async function POST(request: NextRequest) {
     // Insert or replace scorecard result
     await execute(
       `INSERT INTO scorecard_result
-       (user_id, application_no, name_on_card, category, pwbd, state_of_eligibility, s1_nta, s2_nta, best_nta, crl, cat_rank, pcm_nta, dob, gender, adv_cutoff_cat, advanced_qualified)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+       (user_id, application_no, name_on_card, category, pwbd, state_of_eligibility, s1_nta, s2_nta, best_nta, crl, cat_rank, s1_physics, s1_chemistry, s1_maths, s2_physics, s2_chemistry, s2_maths, dob, gender, adv_cutoff_cat, advanced_qualified)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
        ON CONFLICT (user_id) DO UPDATE SET
          application_no = $2,
          name_on_card = $3,
@@ -67,11 +72,16 @@ export async function POST(request: NextRequest) {
          best_nta = $9,
          crl = $10,
          cat_rank = $11,
-         pcm_nta = $12,
-         dob = $13,
-         gender = $14,
-         adv_cutoff_cat = $15,
-         advanced_qualified = $16`,
+         s1_physics = $12,
+         s1_chemistry = $13,
+         s1_maths = $14,
+         s2_physics = $15,
+         s2_chemistry = $16,
+         s2_maths = $17,
+         dob = $18,
+         gender = $19,
+         adv_cutoff_cat = $20,
+         advanced_qualified = $21`,
       [
         userId,
         applicationNo,
@@ -84,7 +94,12 @@ export async function POST(request: NextRequest) {
         bestNta,
         crl || null,
         catRank || null,
-        pcmNta || null,
+        s1Physics || null,
+        s1Chemistry || null,
+        s1Maths || null,
+        s2Physics || null,
+        s2Chemistry || null,
+        s2Maths || null,
         dob || null,
         gender || null,
         advCutoffCat,

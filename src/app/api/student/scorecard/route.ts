@@ -94,9 +94,14 @@ export async function POST(request: NextRequest) {
   "state_of_eligibility": "string - State of Eligibility as shown on the scorecard",
   "gender": "string - Male or Female",
   "dob": "string - date of birth in DD/MM/YYYY format if visible",
+  "s1_physics": null or number - Session 1 Physics NTA Score,
+  "s1_chemistry": null or number - Session 1 Chemistry NTA Score,
+  "s1_maths": null or number - Session 1 Maths NTA Score,
   "session1_nta_score": null or number - Total NTA Score for Session 1 / January attempt,
+  "s2_physics": null or number - Session 2 Physics NTA Score,
+  "s2_chemistry": null or number - Session 2 Chemistry NTA Score,
+  "s2_maths": null or number - Session 2 Maths NTA Score,
   "session2_nta_score": null or number - Total NTA Score for Session 2 / April attempt,
-  "pcm_nta_score": null or number - PCM NTA percentile (Physics+Chemistry+Maths combined),
   "final_total_nta_score": null or number - Final Total NTA Score (the best/final percentile),
   "crl": number - All India Rank (Common Rank List),
   "category_rank": null or number - Category Rank if available
@@ -109,7 +114,8 @@ Rules:
 - For category: if it says "GENERAL" or nothing specific, use "OPEN"
 - State of Eligibility is the state name (e.g., "Maharashtra", "Delhi", "Tamil Nadu")
 - Final Total NTA Score is the overall best percentile score
-- PCM NTA Score is the Physics+Chemistry+Maths percentile (may be labeled "NTA Score for B.E./B.Tech")
+- Subject-wise scores: extract Physics, Chemistry, Maths NTA scores separately for each session
+- The scorecard may show subject-wise scores in a table with columns for each session
 - Gender: look for "Male"/"Female" on the scorecard
 - DOB: Date of Birth, format as DD/MM/YYYY
 - Return ONLY the JSON, nothing else`
@@ -147,9 +153,14 @@ Rules:
           stateOfEligibility: parsed.state_of_eligibility || '',
           gender: parsed.gender || '',
           dob: parsed.dob || '',
+          s1Physics: parsed.s1_physics,
+          s1Chemistry: parsed.s1_chemistry,
+          s1Maths: parsed.s1_maths,
           s1Nta: parsed.session1_nta_score,
+          s2Physics: parsed.s2_physics,
+          s2Chemistry: parsed.s2_chemistry,
+          s2Maths: parsed.s2_maths,
           s2Nta: parsed.session2_nta_score,
-          pcmNta: parsed.pcm_nta_score,
           finalNta: parsed.final_total_nta_score,
           crl: parsed.crl,
           catRank: parsed.category_rank,

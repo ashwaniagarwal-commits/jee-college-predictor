@@ -10,8 +10,13 @@ interface Student {
   state_of_eligibility: string;
   best_nta: number;
   s1_nta: number;
+  s1_physics: number;
+  s1_chemistry: number;
+  s1_maths: number;
   s2_nta: number;
-  pcm_nta: number;
+  s2_physics: number;
+  s2_chemistry: number;
+  s2_maths: number;
   crl: number;
   cat_rank: number;
   application_no: string;
@@ -105,15 +110,20 @@ export default function StudentsPage() {
 
   const downloadCSV = () => {
     if (!data?.students) return;
-    const headers = ['Name', 'Contact Number', 'Category', 'Session 1 %ile', 'Session 2 %ile', 'S2-S1 Diff', 'PCM %ile', 'Overall %ile', 'CRL', 'Category Rank', 'Application No', 'DOB', 'Gender', 'BU'];
+    const headers = ['Name', 'Contact Number', 'Category', 'S1 Physics', 'S1 Chemistry', 'S1 Maths', 'S1 %ile', 'S2 Physics', 'S2 Chemistry', 'S2 Maths', 'S2 %ile', 'S2-S1 Diff', 'Overall %ile', 'CRL', 'Category Rank', 'Application No', 'DOB', 'Gender', 'BU'];
     const csvRows = data.students.map(s => [
       `"${(s.name_on_card || '').replace(/"/g, '""')}"`,
       s.mobile || '',
       s.category || '',
+      s.s1_physics != null ? Number(s.s1_physics).toFixed(7) : '',
+      s.s1_chemistry != null ? Number(s.s1_chemistry).toFixed(7) : '',
+      s.s1_maths != null ? Number(s.s1_maths).toFixed(7) : '',
       s.s1_nta != null ? Number(s.s1_nta).toFixed(7) : '',
+      s.s2_physics != null ? Number(s.s2_physics).toFixed(7) : '',
+      s.s2_chemistry != null ? Number(s.s2_chemistry).toFixed(7) : '',
+      s.s2_maths != null ? Number(s.s2_maths).toFixed(7) : '',
       s.s2_nta != null ? Number(s.s2_nta).toFixed(7) : '',
       (s.s1_nta != null && s.s2_nta != null) ? (Number(s.s2_nta) - Number(s.s1_nta)).toFixed(7) : '',
-      s.pcm_nta != null ? Number(s.pcm_nta).toFixed(7) : '',
       s.best_nta != null ? Number(s.best_nta).toFixed(7) : '',
       s.crl?.toString() || '',
       s.cat_rank?.toString() || '',
@@ -138,10 +148,15 @@ export default function StudentsPage() {
     { key: 'name', label: 'Name', sortable: true },
     { key: 'mobile', label: 'Contact', sortable: false },
     { key: 'category', label: 'Category', sortable: true },
+    { key: 's1phy', label: 'S1 Phy', sortable: true },
+    { key: 's1chem', label: 'S1 Chem', sortable: true },
+    { key: 's1math', label: 'S1 Math', sortable: true },
     { key: 's1nta', label: 'S1 %ile', sortable: true },
+    { key: 's2phy', label: 'S2 Phy', sortable: true },
+    { key: 's2chem', label: 'S2 Chem', sortable: true },
+    { key: 's2math', label: 'S2 Math', sortable: true },
     { key: 's2nta', label: 'S2 %ile', sortable: true },
     { key: 'diff', label: 'S2-S1 Diff', sortable: false },
-    { key: 'pcmnta', label: 'PCM %ile', sortable: true },
     { key: 'nta', label: 'Overall %ile', sortable: true },
     { key: 'crl', label: 'CRL', sortable: true },
     { key: 'catrank', label: 'Cat Rank', sortable: true },
@@ -259,9 +274,33 @@ export default function StudentsPage() {
                         {student.category || '-'}
                       </span>
                     </td>
+                    {/* S1 Physics */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.s1_physics != null ? Number(student.s1_physics).toFixed(2) : '-'}
+                    </td>
+                    {/* S1 Chemistry */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.s1_chemistry != null ? Number(student.s1_chemistry).toFixed(2) : '-'}
+                    </td>
+                    {/* S1 Maths */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.s1_maths != null ? Number(student.s1_maths).toFixed(2) : '-'}
+                    </td>
                     {/* S1 %ile */}
                     <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
                       {student.s1_nta != null ? Number(student.s1_nta).toFixed(2) : '-'}
+                    </td>
+                    {/* S2 Physics */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.s2_physics != null ? Number(student.s2_physics).toFixed(2) : '-'}
+                    </td>
+                    {/* S2 Chemistry */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.s2_chemistry != null ? Number(student.s2_chemistry).toFixed(2) : '-'}
+                    </td>
+                    {/* S2 Maths */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.s2_maths != null ? Number(student.s2_maths).toFixed(2) : '-'}
                     </td>
                     {/* S2 %ile */}
                     <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
@@ -277,10 +316,6 @@ export default function StudentsPage() {
                           </span>
                         );
                       })() : '-'}
-                    </td>
-                    {/* PCM %ile */}
-                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
-                      {student.pcm_nta != null ? Number(student.pcm_nta).toFixed(2) : '-'}
                     </td>
                     {/* Overall %ile */}
                     <td className="px-3 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
