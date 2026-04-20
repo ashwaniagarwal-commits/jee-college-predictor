@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Download, Users } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Download, Users, FileText, ExternalLink } from 'lucide-react';
 
 interface Student {
   user_id: string;
@@ -20,6 +20,7 @@ interface Student {
   advanced_qualified: boolean;
   bu: string;
   mobile: string;
+  s3_key: string | null;
 }
 
 interface ApiResponse {
@@ -90,6 +91,18 @@ export default function StudentsPage() {
     return sortOrder === 'asc' ? <ChevronUp className="text-orange-500" size={14} /> : <ChevronDown className="text-orange-500" size={14} />;
   };
 
+  const viewPdf = async (s3Key: string) => {
+    try {
+      const res = await fetch(`/api/admin/scorecard-url?key=${encodeURIComponent(s3Key)}`);
+      if (res.ok) {
+        const { url } = await res.json();
+        window.open(url, '_blank');
+      }
+    } catch (err) {
+      console.error('Error getting PDF URL:', err);
+    }
+  };
+
   const downloadCSV = () => {
     if (!data?.students) return;
     const headers = ['Name', 'Contact Number', 'Category', 'Session 1 %ile', 'Session 2 %ile', 'S2-S1 Diff', 'PCM %ile', 'Overall %ile', 'CRL', 'Category Rank', 'Application No', 'DOB', 'Gender', 'BU'];
@@ -135,6 +148,7 @@ export default function StudentsPage() {
     { key: 'appno', label: 'Application No', sortable: false },
     { key: 'dob', label: 'DOB', sortable: false },
     { key: 'gender', label: 'Gender', sortable: true },
+    { key: 'pdf', label: 'Scorecard', sortable: false },
   ];
 
   return (
@@ -293,6 +307,21 @@ export default function StudentsPage() {
                     {/* Gender */}
                     <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
                       {student.gender || '-'}
+                    </td>
+                    {/* Scorecard PDF */}
+                    <td className="px-3 py-3 text-sm whitespace-nowrap">
+                      {student.s3_key ? (
+                        <button
+                          onClick={() => viewPdf(student.s3_key!)}
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors text-xs font-semibold"
+                        >
+                          <FileText size={14} />
+                          View
+                          <ExternalLink size={10} />
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </td>
                   </tr>
                 ))

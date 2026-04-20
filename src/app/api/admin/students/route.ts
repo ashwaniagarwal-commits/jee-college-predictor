@@ -77,13 +77,20 @@ export async function GET(request: NextRequest) {
       advanced_qualified: boolean;
       bu: string;
       mobile: string;
+      s3_key: string | null;
     }>(
       `SELECT sr.user_id, sr.name_on_card, sr.category, sr.state_of_eligibility,
               sr.best_nta, sr.s1_nta, sr.s2_nta, sr.pcm_nta, sr.crl, sr.cat_rank,
               sr.application_no, sr.dob, sr.gender,
-              sr.advanced_qualified, sm.bu, sm.mobile
+              sr.advanced_qualified, sm.bu, sm.mobile,
+              su.s3_key
        FROM scorecard_result sr
        JOIN student_mapping sm ON sr.user_id = sm.user_id
+       LEFT JOIN LATERAL (
+         SELECT s3_key FROM scorecard_upload
+         WHERE user_id = sr.user_id AND s3_key IS NOT NULL
+         ORDER BY uploaded_at DESC LIMIT 1
+       ) su ON true
        ${whereClause}
        ORDER BY ${sortColumn} ${order} NULLS LAST
        LIMIT $${paramIdx} OFFSET $${paramIdx + 1}`,
