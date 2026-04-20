@@ -298,21 +298,6 @@ function ResultPageContent() {
           )}
         </div>
 
-        {/* CTA Card */}
-        <div className="card-shadow p-8 bg-gradient-to-r from-[#FF6B35] to-orange-600 text-white rounded-lg mb-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <h3 className="text-xl font-bold mb-2">Still confused about your choices?</h3>
-              <p className="text-orange-100">
-                Book a free JoSAA strategy call with our experts
-              </p>
-            </div>
-            <button className="px-6 py-3 bg-white text-[#FF6B35] font-bold rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">
-              Book Free Call
-            </button>
-          </div>
-        </div>
-
         {/* Action Buttons */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <button
