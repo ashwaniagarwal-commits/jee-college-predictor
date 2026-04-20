@@ -256,7 +256,6 @@ function ResultPageContent() {
                         </span>
                       </div>
                       <p className="text-sm text-gray-600">{college.branch_name}</p>
-                      <p className="text-xs text-gray-500 mt-1">{college.quota}</p>
                     </div>
 
                     <div>
