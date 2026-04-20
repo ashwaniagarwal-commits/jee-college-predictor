@@ -37,9 +37,14 @@ export async function GET(request: NextRequest) {
       'name': 'sr.name_on_card',
       'category': 'sr.category',
       'state': 'sr.state_of_eligibility',
+      's1nta': 'sr.s1_nta',
+      's2nta': 'sr.s2_nta',
+      'pcmnta': 'sr.pcm_nta',
       'nta': 'sr.best_nta',
       'crl': 'sr.crl',
+      'catrank': 'sr.cat_rank',
       'bu': 'sm.bu',
+      'gender': 'sr.gender',
     };
     const sortColumn = allowedSorts[sortBy] || 'sr.crl';
     const order = sortOrder === 'desc' ? 'DESC' : 'ASC';
@@ -63,14 +68,19 @@ export async function GET(request: NextRequest) {
       best_nta: number;
       s1_nta: number;
       s2_nta: number;
+      pcm_nta: number;
       crl: number;
       cat_rank: number;
+      application_no: string;
+      dob: string;
+      gender: string;
       advanced_qualified: boolean;
       bu: string;
       mobile: string;
     }>(
       `SELECT sr.user_id, sr.name_on_card, sr.category, sr.state_of_eligibility,
-              sr.best_nta, sr.s1_nta, sr.s2_nta, sr.crl, sr.cat_rank,
+              sr.best_nta, sr.s1_nta, sr.s2_nta, sr.pcm_nta, sr.crl, sr.cat_rank,
+              sr.application_no, sr.dob, sr.gender,
               sr.advanced_qualified, sm.bu, sm.mobile
        FROM scorecard_result sr
        JOIN student_mapping sm ON sr.user_id = sm.user_id

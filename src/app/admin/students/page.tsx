@@ -11,8 +11,12 @@ interface Student {
   best_nta: number;
   s1_nta: number;
   s2_nta: number;
+  pcm_nta: number;
   crl: number;
   cat_rank: number;
+  application_no: string;
+  dob: string;
+  gender: string;
   advanced_qualified: boolean;
   bu: string;
   mobile: string;
@@ -88,15 +92,21 @@ export default function StudentsPage() {
 
   const downloadCSV = () => {
     if (!data?.students) return;
-    const headers = ['Name', 'Category', 'State of Eligibility', 'Final NTA Score', 'CRL', 'BU', 'Mobile'];
+    const headers = ['Name', 'Contact Number', 'Category', 'Session 1 %ile', 'Session 2 %ile', 'PCM %ile', 'Overall %ile', 'CRL', 'Category Rank', 'Application No', 'DOB', 'Gender', 'BU'];
     const csvRows = data.students.map(s => [
-      s.name_on_card || '',
-      s.category || '',
-      s.state_of_eligibility || '',
-      s.best_nta?.toFixed(2) || '',
-      s.crl?.toString() || '',
-      s.bu || '',
+      `"${(s.name_on_card || '').replace(/"/g, '""')}"`,
       s.mobile || '',
+      s.category || '',
+      s.s1_nta != null ? Number(s.s1_nta).toFixed(7) : '',
+      s.s2_nta != null ? Number(s.s2_nta).toFixed(7) : '',
+      s.pcm_nta != null ? Number(s.pcm_nta).toFixed(7) : '',
+      s.best_nta != null ? Number(s.best_nta).toFixed(7) : '',
+      s.crl?.toString() || '',
+      s.cat_rank?.toString() || '',
+      s.application_no || '',
+      s.dob || '',
+      s.gender || '',
+      s.bu || '',
     ]);
     const csv = [headers.join(','), ...csvRows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -109,6 +119,21 @@ export default function StudentsPage() {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   };
+
+  const columns = [
+    { key: 'name', label: 'Name', sortable: true },
+    { key: 'mobile', label: 'Contact', sortable: false },
+    { key: 'category', label: 'Category', sortable: true },
+    { key: 's1nta', label: 'S1 %ile', sortable: true },
+    { key: 's2nta', label: 'S2 %ile', sortable: true },
+    { key: 'pcmnta', label: 'PCM %ile', sortable: true },
+    { key: 'nta', label: 'Overall %ile', sortable: true },
+    { key: 'crl', label: 'CRL', sortable: true },
+    { key: 'catrank', label: 'Cat Rank', sortable: true },
+    { key: 'appno', label: 'Application No', sortable: false },
+    { key: 'dob', label: 'DOB', sortable: false },
+    { key: 'gender', label: 'Gender', sortable: true },
+  ];
 
   return (
     <div className="space-y-6">
@@ -168,49 +193,25 @@ export default function StudentsPage() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">#</th>
-                <th
-                  onClick={() => handleSort('name')}
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-orange-600"
-                >
-                  <div className="flex items-center gap-1">Student Name <SortIcon column="name" /></div>
-                </th>
-                <th
-                  onClick={() => handleSort('category')}
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-orange-600"
-                >
-                  <div className="flex items-center gap-1">Category <SortIcon column="category" /></div>
-                </th>
-                <th
-                  onClick={() => handleSort('state')}
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-orange-600"
-                >
-                  <div className="flex items-center gap-1">State <SortIcon column="state" /></div>
-                </th>
-                <th
-                  onClick={() => handleSort('nta')}
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-orange-600"
-                >
-                  <div className="flex items-center gap-1">Final NTA Score <SortIcon column="nta" /></div>
-                </th>
-                <th
-                  onClick={() => handleSort('crl')}
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-orange-600"
-                >
-                  <div className="flex items-center gap-1">CRL <SortIcon column="crl" /></div>
-                </th>
-                <th
-                  onClick={() => handleSort('bu')}
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:text-orange-600"
-                >
-                  <div className="flex items-center gap-1">BU <SortIcon column="bu" /></div>
-                </th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">#</th>
+                {columns.map(col => (
+                  <th
+                    key={col.key}
+                    onClick={col.sortable ? () => handleSort(col.key) : undefined}
+                    className={`px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap ${col.sortable ? 'cursor-pointer hover:text-orange-600' : ''}`}
+                  >
+                    <div className="flex items-center gap-1">
+                      {col.label}
+                      {col.sortable && <SortIcon column={col.key} />}
+                    </div>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={columns.length + 1} className="px-4 py-12 text-center text-gray-500">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
                     Loading...
                   </td>
@@ -218,14 +219,19 @@ export default function StudentsPage() {
               ) : data?.students && data.students.length > 0 ? (
                 data.students.map((student, index) => (
                   <tr key={student.user_id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-sm text-gray-500">
+                    <td className="px-3 py-3 text-sm text-gray-500">
                       {(page - 1) * 50 + index + 1}
                     </td>
-                    <td className="px-4 py-3">
+                    {/* Name */}
+                    <td className="px-3 py-3">
                       <p className="text-sm font-semibold text-gray-900">{student.name_on_card || '-'}</p>
-                      <p className="text-xs text-gray-500">{student.mobile}</p>
                     </td>
-                    <td className="px-4 py-3">
+                    {/* Contact */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.mobile || '-'}
+                    </td>
+                    {/* Category */}
+                    <td className="px-3 py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         student.category === 'OPEN' ? 'bg-blue-100 text-blue-800' :
                         student.category === 'OBC-NCL' ? 'bg-yellow-100 text-yellow-800' :
@@ -237,25 +243,49 @@ export default function StudentsPage() {
                         {student.category || '-'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {student.state_of_eligibility || '-'}
+                    {/* S1 %ile */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.s1_nta != null ? Number(student.s1_nta).toFixed(2) : '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                      {student.best_nta ? student.best_nta.toFixed(2) : '-'}
+                    {/* S2 %ile */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.s2_nta != null ? Number(student.s2_nta).toFixed(2) : '-'}
                     </td>
-                    <td className="px-4 py-3">
+                    {/* PCM %ile */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.pcm_nta != null ? Number(student.pcm_nta).toFixed(2) : '-'}
+                    </td>
+                    {/* Overall %ile */}
+                    <td className="px-3 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
+                      {student.best_nta != null ? Number(student.best_nta).toFixed(2) : '-'}
+                    </td>
+                    {/* CRL */}
+                    <td className="px-3 py-3">
                       <span className="text-sm font-bold text-orange-600">
                         {student.crl ? student.crl.toLocaleString() : '-'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {student.bu || '-'}
+                    {/* Category Rank */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.cat_rank ? student.cat_rank.toLocaleString() : '-'}
+                    </td>
+                    {/* Application No */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.application_no || '-'}
+                    </td>
+                    {/* DOB */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.dob || '-'}
+                    </td>
+                    {/* Gender */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.gender || '-'}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={columns.length + 1} className="px-4 py-12 text-center text-gray-500">
                     No student data found. Students need to upload their scorecards first.
                   </td>
                 </tr>

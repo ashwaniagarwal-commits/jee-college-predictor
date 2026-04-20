@@ -92,12 +92,14 @@ export async function POST(request: NextRequest) {
   "category": "string - one of: OPEN, OBC-NCL, SC, ST, EWS",
   "pwbd": false,
   "state_of_eligibility": "string - State of Eligibility as shown on the scorecard",
+  "gender": "string - Male or Female",
+  "dob": "string - date of birth in DD/MM/YYYY format if visible",
   "session1_nta_score": null or number - Total NTA Score for Session 1 / January attempt,
   "session2_nta_score": null or number - Total NTA Score for Session 2 / April attempt,
+  "pcm_nta_score": null or number - PCM NTA percentile (Physics+Chemistry+Maths combined),
   "final_total_nta_score": null or number - Final Total NTA Score (the best/final percentile),
   "crl": number - All India Rank (Common Rank List),
-  "category_rank": null or number - Category Rank if available,
-  "dob": "string - date of birth if visible"
+  "category_rank": null or number - Category Rank if available
 }
 
 Rules:
@@ -107,6 +109,9 @@ Rules:
 - For category: if it says "GENERAL" or nothing specific, use "OPEN"
 - State of Eligibility is the state name (e.g., "Maharashtra", "Delhi", "Tamil Nadu")
 - Final Total NTA Score is the overall best percentile score
+- PCM NTA Score is the Physics+Chemistry+Maths percentile (may be labeled "NTA Score for B.E./B.Tech")
+- Gender: look for "Male"/"Female" on the scorecard
+- DOB: Date of Birth, format as DD/MM/YYYY
 - Return ONLY the JSON, nothing else`
                 }
               ]
@@ -140,8 +145,11 @@ Rules:
           category: parsed.category || 'OPEN',
           pwbd: parsed.pwbd || false,
           stateOfEligibility: parsed.state_of_eligibility || '',
+          gender: parsed.gender || '',
+          dob: parsed.dob || '',
           s1Nta: parsed.session1_nta_score,
           s2Nta: parsed.session2_nta_score,
+          pcmNta: parsed.pcm_nta_score,
           finalNta: parsed.final_total_nta_score,
           crl: parsed.crl,
           catRank: parsed.category_rank,

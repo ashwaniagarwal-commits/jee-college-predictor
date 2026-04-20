@@ -7,6 +7,23 @@ const pool = new Pool({
   database: 'postgres',
   ssl: { rejectUnauthorized: false }
 });
-pool.query('ALTER TABLE scorecard_result ADD COLUMN IF NOT EXISTS state_of_eligibility TEXT;')
-  .then(function() { console.log('Column added successfully!'); pool.end(); })
-  .catch(function(e) { console.error(e); pool.end(); });
+
+async function run() {
+  try {
+    await pool.query('ALTER TABLE scorecard_result ADD COLUMN IF NOT EXISTS state_of_eligibility TEXT;');
+    console.log('Added: state_of_eligibility');
+    await pool.query('ALTER TABLE scorecard_result ADD COLUMN IF NOT EXISTS pcm_nta DOUBLE PRECISION;');
+    console.log('Added: pcm_nta');
+    await pool.query('ALTER TABLE scorecard_result ADD COLUMN IF NOT EXISTS dob TEXT;');
+    console.log('Added: dob');
+    await pool.query('ALTER TABLE scorecard_result ADD COLUMN IF NOT EXISTS gender TEXT;');
+    console.log('Added: gender');
+    console.log('All columns added successfully!');
+  } catch (e) {
+    console.error(e);
+  } finally {
+    await pool.end();
+  }
+}
+
+run();

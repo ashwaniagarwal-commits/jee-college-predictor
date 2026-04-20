@@ -80,6 +80,9 @@ export async function initDb(): Promise<void> {
       best_nta DOUBLE PRECISION,
       crl INTEGER,
       cat_rank INTEGER,
+      pcm_nta DOUBLE PRECISION,
+      dob TEXT,
+      gender TEXT,
       adv_cutoff_cat DOUBLE PRECISION,
       advanced_qualified BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT NOW()

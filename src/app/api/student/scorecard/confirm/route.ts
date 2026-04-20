@@ -23,10 +23,13 @@ export async function POST(request: NextRequest) {
       category,
       s1Nta,
       s2Nta,
+      pcmNta,
       finalNta,
       catRank,
       pwbd,
       stateOfEligibility,
+      gender,
+      dob,
     } = body;
 
     if (!uploadId || !userId || !applicationNo || !nameOnCard || !category) {
@@ -51,8 +54,8 @@ export async function POST(request: NextRequest) {
     // Insert or replace scorecard result
     await execute(
       `INSERT INTO scorecard_result
-       (user_id, application_no, name_on_card, category, pwbd, state_of_eligibility, s1_nta, s2_nta, best_nta, crl, cat_rank, adv_cutoff_cat, advanced_qualified)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       (user_id, application_no, name_on_card, category, pwbd, state_of_eligibility, s1_nta, s2_nta, best_nta, crl, cat_rank, pcm_nta, dob, gender, adv_cutoff_cat, advanced_qualified)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
        ON CONFLICT (user_id) DO UPDATE SET
          application_no = $2,
          name_on_card = $3,
@@ -64,8 +67,11 @@ export async function POST(request: NextRequest) {
          best_nta = $9,
          crl = $10,
          cat_rank = $11,
-         adv_cutoff_cat = $12,
-         advanced_qualified = $13`,
+         pcm_nta = $12,
+         dob = $13,
+         gender = $14,
+         adv_cutoff_cat = $15,
+         advanced_qualified = $16`,
       [
         userId,
         applicationNo,
@@ -78,6 +84,9 @@ export async function POST(request: NextRequest) {
         bestNta,
         crl || null,
         catRank || null,
+        pcmNta || null,
+        dob || null,
+        gender || null,
         advCutoffCat,
         advancedQualified,
       ]
