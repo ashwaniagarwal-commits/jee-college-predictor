@@ -245,7 +245,7 @@ function ResultPageContent() {
                   key={index}
                   className="card-shadow p-6 border-l-4 border-green-500"
                 >
-                  <div className="grid md:grid-cols-3 gap-4 mb-4">
+                  <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-lg font-bold text-[#1a1a2e]">
@@ -269,27 +269,6 @@ function ResultPageContent() {
                       <p className="text-xs text-gray-500 mt-1">
                         Δ +{rankDelta} ({rankDeltaPercent}%)
                       </p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-gray-600 font-semibold mb-2">Admission Probability</p>
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-                          <div
-                            className={`h-full ${
-                              college.admitProb >= 0.75
-                                ? 'bg-green-500'
-                                : college.admitProb >= 0.5
-                                ? 'bg-yellow-500'
-                                : 'bg-orange-500'
-                            }`}
-                            style={{ width: `${college.admitProb * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm font-bold text-gray-900 w-12">
-                          {(college.admitProb * 100).toFixed(0)}%
-                        </span>
-                      </div>
                     </div>
                   </div>
                 </div>
