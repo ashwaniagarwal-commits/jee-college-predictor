@@ -128,11 +128,12 @@ export default function StudentsPage() {
       const allData = await res.json();
       const students: Student[] = allData.students || [];
 
-      const headers = ['Name', 'Contact Number', 'Category', 'S1 Physics', 'S1 Chemistry', 'S1 Maths', 'S1 %ile', 'S2 Physics', 'S2 Chemistry', 'S2 Maths', 'S2 %ile', 'S2-S1 Diff', 'Overall %ile', 'CRL', 'Category Rank', 'Application No', 'DOB', 'Gender', 'BU'];
+      const headers = ['Name', 'Contact Number', 'Category', 'State of Eligibility', 'S1 Physics', 'S1 Chemistry', 'S1 Maths', 'S1 %ile', 'S2 Physics', 'S2 Chemistry', 'S2 Maths', 'S2 %ile', 'S2-S1 Diff', 'Overall %ile', 'CRL', 'Category Rank', 'Application No', 'DOB', 'Gender', 'BU'];
       const csvRows = students.map(s => [
         `"${(s.name_on_card || '').replace(/"/g, '""')}"`,
         s.mobile || '',
         s.category || '',
+        s.state_of_eligibility || '',
         s.s1_physics != null ? Number(s.s1_physics).toFixed(7) : '',
         s.s1_chemistry != null ? Number(s.s1_chemistry).toFixed(7) : '',
         s.s1_maths != null ? Number(s.s1_maths).toFixed(7) : '',
@@ -171,6 +172,7 @@ export default function StudentsPage() {
     { key: 'name', label: 'Name', sortable: true },
     { key: 'mobile', label: 'Contact', sortable: false },
     { key: 'category', label: 'Category', sortable: true },
+    { key: 'state', label: 'State', sortable: true },
     { key: 's1phy', label: 'S1 Phy', sortable: true },
     { key: 's1chem', label: 'S1 Chem', sortable: true },
     { key: 's1math', label: 'S1 Math', sortable: true },
@@ -297,6 +299,10 @@ export default function StudentsPage() {
                       }`}>
                         {student.category || '-'}
                       </span>
+                    </td>
+                    {/* State of Eligibility */}
+                    <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
+                      {student.state_of_eligibility || '-'}
                     </td>
                     {/* S1 Physics */}
                     <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
