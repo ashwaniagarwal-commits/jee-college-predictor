@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  LayoutDashboard,
-  BarChart3,
   Upload,
   Users,
   Menu,
@@ -25,7 +23,6 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [reportsOpen, setReportsOpen] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [password, setPassword] = useState('');
@@ -59,16 +56,6 @@ export default function AdminLayout({
   };
 
   const isActive = (path: string) => pathname === path;
-  const isReportActive = () => pathname.startsWith('/admin/reports');
-
-  const reportItems = [
-    { name: 'BU-Region', path: '/admin/reports/bu-region' },
-    { name: 'Top Percentile', path: '/admin/reports/top-percentile' },
-    { name: 'AIR Buckets', path: '/admin/reports/air-bucket' },
-    { name: 'Advanced Qualifiers', path: '/admin/reports/advanced-qualifiers' },
-    { name: 'Session Improvement', path: '/admin/reports/session-improvement' },
-    { name: 'BU Totals', path: '/admin/reports/bu-totals' },
-  ];
 
   if (checkingAuth) {
     return (
@@ -145,60 +132,6 @@ export default function AdminLayout({
         </div>
 
         <nav className="p-4 space-y-2">
-          {/* Dashboard */}
-          <Link href="/admin">
-            <button
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive('/admin')
-                  ? 'bg-orange-500 text-white'
-                  : 'text-gray-300 hover:bg-gray-800'
-              }`}
-            >
-              <LayoutDashboard size={20} />
-              <span>Dashboard</span>
-            </button>
-          </Link>
-
-          {/* Reports */}
-          <div>
-            <button
-              onClick={() => setReportsOpen(!reportsOpen)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                isReportActive()
-                  ? 'bg-orange-500 text-white'
-                  : 'text-gray-300 hover:bg-gray-800'
-              }`}
-            >
-              <BarChart3 size={20} />
-              <span>Reports</span>
-              <span
-                className={`ml-auto transition-transform ${
-                  reportsOpen ? 'rotate-180' : ''
-                }`}
-              >
-                ▼
-              </span>
-            </button>
-
-            {reportsOpen && (
-              <div className="ml-6 mt-2 space-y-1">
-                {reportItems.map((item) => (
-                  <Link key={item.path} href={item.path}>
-                    <button
-                      className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-colors ${
-                        isActive(item.path)
-                          ? 'bg-orange-500 text-white'
-                          : 'text-gray-400 hover:bg-gray-800'
-                      }`}
-                    >
-                      {item.name}
-                    </button>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Student Data */}
           <Link href="/admin/students">
             <button
