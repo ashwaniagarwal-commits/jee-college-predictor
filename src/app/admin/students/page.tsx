@@ -52,7 +52,7 @@ export default function StudentsPage() {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '50',
+        limit: '100',
         sortBy,
         sortOrder,
       });
@@ -108,40 +108,63 @@ export default function StudentsPage() {
     }
   };
 
-  const downloadCSV = () => {
-    if (!data?.students) return;
-    const headers = ['Name', 'Contact Number', 'Category', 'S1 Physics', 'S1 Chemistry', 'S1 Maths', 'S1 %ile', 'S2 Physics', 'S2 Chemistry', 'S2 Maths', 'S2 %ile', 'S2-S1 Diff', 'Overall %ile', 'CRL', 'Category Rank', 'Application No', 'DOB', 'Gender', 'BU'];
-    const csvRows = data.students.map(s => [
-      `"${(s.name_on_card || '').replace(/"/g, '""')}"`,
-      s.mobile || '',
-      s.category || '',
-      s.s1_physics != null ? Number(s.s1_physics).toFixed(7) : '',
-      s.s1_chemistry != null ? Number(s.s1_chemistry).toFixed(7) : '',
-      s.s1_maths != null ? Number(s.s1_maths).toFixed(7) : '',
-      s.s1_nta != null ? Number(s.s1_nta).toFixed(7) : '',
-      s.s2_physics != null ? Number(s.s2_physics).toFixed(7) : '',
-      s.s2_chemistry != null ? Number(s.s2_chemistry).toFixed(7) : '',
-      s.s2_maths != null ? Number(s.s2_maths).toFixed(7) : '',
-      s.s2_nta != null ? Number(s.s2_nta).toFixed(7) : '',
-      (s.s1_nta != null && s.s2_nta != null) ? (Number(s.s2_nta) - Number(s.s1_nta)).toFixed(7) : '',
-      s.best_nta != null ? Number(s.best_nta).toFixed(7) : '',
-      s.crl?.toString() || '',
-      s.cat_rank?.toString() || '',
-      s.application_no || '',
-      s.dob || '',
-      s.gender || '',
-      s.bu || '',
-    ]);
-    const csv = [headers.join(','), ...csvRows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'students_data.csv';
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+  const [exporting, setExporting] = useState(false);
+
+  const downloadCSV = async () => {
+    setExporting(true);
+    try {
+      // Fetch ALL students (no pagination limit)
+      const params = new URLSearchParams({
+        page: '1',
+        limit: '100000',
+        sortBy,
+        sortOrder,
+      });
+      if (search) params.set('search', search);
+      if (bu) params.set('bu', bu);
+
+      const res = await fetch(`/api/admin/students?${params}`);
+      if (!res.ok) return;
+      const allData = await res.json();
+      const students: Student[] = allData.students || [];
+
+      const headers = ['Name', 'Contact Number', 'Category', 'S1 Physics', 'S1 Chemistry', 'S1 Maths', 'S1 %ile', 'S2 Physics', 'S2 Chemistry', 'S2 Maths', 'S2 %ile', 'S2-S1 Diff', 'Overall %ile', 'CRL', 'Category Rank', 'Application No', 'DOB', 'Gender', 'BU'];
+      const csvRows = students.map(s => [
+        `"${(s.name_on_card || '').replace(/"/g, '""')}"`,
+        s.mobile || '',
+        s.category || '',
+        s.s1_physics != null ? Number(s.s1_physics).toFixed(7) : '',
+        s.s1_chemistry != null ? Number(s.s1_chemistry).toFixed(7) : '',
+        s.s1_maths != null ? Number(s.s1_maths).toFixed(7) : '',
+        s.s1_nta != null ? Number(s.s1_nta).toFixed(7) : '',
+        s.s2_physics != null ? Number(s.s2_physics).toFixed(7) : '',
+        s.s2_chemistry != null ? Number(s.s2_chemistry).toFixed(7) : '',
+        s.s2_maths != null ? Number(s.s2_maths).toFixed(7) : '',
+        s.s2_nta != null ? Number(s.s2_nta).toFixed(7) : '',
+        (s.s1_nta != null && s.s2_nta != null) ? (Number(s.s2_nta) - Number(s.s1_nta)).toFixed(7) : '',
+        s.best_nta != null ? Number(s.best_nta).toFixed(7) : '',
+        s.crl?.toString() || '',
+        s.cat_rank?.toString() || '',
+        s.application_no || '',
+        s.dob || '',
+        s.gender || '',
+        s.bu || '',
+      ]);
+      const csv = [headers.join(','), ...csvRows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'students_data.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Export error:', err);
+    } finally {
+      setExporting(false);
+    }
   };
 
   const columns = [
@@ -183,10 +206,11 @@ export default function StudentsPage() {
         </div>
         <button
           onClick={downloadCSV}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-semibold text-sm"
+          disabled={exporting}
+          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-semibold text-sm disabled:opacity-50"
         >
-          <Download size={16} />
-          Export CSV
+          <Download size={16} className={exporting ? 'animate-spin' : ''} />
+          {exporting ? 'Exporting...' : `Export All CSV (${data?.total || 0})`}
         </button>
       </div>
 
@@ -251,7 +275,7 @@ export default function StudentsPage() {
                 data.students.map((student, index) => (
                   <tr key={student.user_id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-3 py-3 text-sm text-gray-500">
-                      {(page - 1) * 50 + index + 1}
+                      {(page - 1) * 100 + index + 1}
                     </td>
                     {/* Name */}
                     <td className="px-3 py-3">
@@ -375,7 +399,7 @@ export default function StudentsPage() {
         {data && data.totalPages > 1 && (
           <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
             <p className="text-sm text-gray-600">
-              Showing {(page - 1) * 50 + 1} to {Math.min(page * 50, data.total)} of {data.total}
+              Showing {(page - 1) * 100 + 1} to {Math.min(page * 100, data.total)} of {data.total}
             </p>
             <div className="flex items-center gap-2">
               <button
