@@ -92,13 +92,14 @@ export default function StudentsPage() {
 
   const downloadCSV = () => {
     if (!data?.students) return;
-    const headers = ['Name', 'Contact Number', 'Category', 'Session 1 %ile', 'Session 2 %ile', 'PCM %ile', 'Overall %ile', 'CRL', 'Category Rank', 'Application No', 'DOB', 'Gender', 'BU'];
+    const headers = ['Name', 'Contact Number', 'Category', 'Session 1 %ile', 'Session 2 %ile', 'S2-S1 Diff', 'PCM %ile', 'Overall %ile', 'CRL', 'Category Rank', 'Application No', 'DOB', 'Gender', 'BU'];
     const csvRows = data.students.map(s => [
       `"${(s.name_on_card || '').replace(/"/g, '""')}"`,
       s.mobile || '',
       s.category || '',
       s.s1_nta != null ? Number(s.s1_nta).toFixed(7) : '',
       s.s2_nta != null ? Number(s.s2_nta).toFixed(7) : '',
+      (s.s1_nta != null && s.s2_nta != null) ? (Number(s.s2_nta) - Number(s.s1_nta)).toFixed(7) : '',
       s.pcm_nta != null ? Number(s.pcm_nta).toFixed(7) : '',
       s.best_nta != null ? Number(s.best_nta).toFixed(7) : '',
       s.crl?.toString() || '',
@@ -126,6 +127,7 @@ export default function StudentsPage() {
     { key: 'category', label: 'Category', sortable: true },
     { key: 's1nta', label: 'S1 %ile', sortable: true },
     { key: 's2nta', label: 'S2 %ile', sortable: true },
+    { key: 'diff', label: 'S2-S1 Diff', sortable: false },
     { key: 'pcmnta', label: 'PCM %ile', sortable: true },
     { key: 'nta', label: 'Overall %ile', sortable: true },
     { key: 'crl', label: 'CRL', sortable: true },
@@ -250,6 +252,17 @@ export default function StudentsPage() {
                     {/* S2 %ile */}
                     <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
                       {student.s2_nta != null ? Number(student.s2_nta).toFixed(2) : '-'}
+                    </td>
+                    {/* S2-S1 Diff */}
+                    <td className="px-3 py-3 text-sm whitespace-nowrap">
+                      {student.s1_nta != null && student.s2_nta != null ? (() => {
+                        const diff = Number(student.s2_nta) - Number(student.s1_nta);
+                        return (
+                          <span className={`font-semibold ${diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                            {diff > 0 ? '+' : ''}{diff.toFixed(2)}
+                          </span>
+                        );
+                      })() : '-'}
                     </td>
                     {/* PCM %ile */}
                     <td className="px-3 py-3 text-sm text-gray-700 whitespace-nowrap">
